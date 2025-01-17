@@ -2,64 +2,39 @@ package main
 
 import "fmt"
 
-type Observable interface {
-	Update(ID int) error
+type Observer interface {
+	Update(message string)
 }
 
-type ConcreteObservable struct {
-	Name string
-	Id   int
+type Subscribers struct {
+	observers []Observer
 }
 
-func (o *ConcreteObservable) Update(ID int) error {
-	o.Id = ID
-	return nil
+func (s *Subscribers) Add(observer Observer) {
+	s.observers = append(s.observers, observer)
 }
 
-type Subjects struct { // like app
-	observable []Observable // list observer
-	state      int
-}
-
-func (s *Subjects) Attach(ob Observable) {
-	s.observable = append(s.observable, ob)
-}
-
-func (s *Subjects) Notify(state int) error {
-	s.state = state
-	for _, ob := range s.observable {
-		if err := ob.Update(state); err != nil {
-			return err
-		}
+func (s *Subscribers) Notify(message string) {
+	for _, s := range s.observers {
+		s.Update(message)
 	}
-	return nil
 }
 
-func (s *Subjects) GetIDs() {
-	for _, ob := range s.observable {
-		fmt.Printf("Onservable %s is %d\n", ob.(*ConcreteObservable).Name, ob.(*ConcreteObservable).Id)
-	}
+type Subscrier struct {
+	name string
+}
+
+func (s *Subscrier) Update(message string) {
+	fmt.Println(s.name, message)
 }
 
 func main() {
-	co1 := ConcreteObservable{
-		Name: "OB0",
-		Id:   0,
-	}
-	co2 := ConcreteObservable{
-		Name: "OB1",
-		Id:   0,
+	s := Subscribers{
+		observers: make([]Observer, 0),
 	}
 
-	sub := Subjects{state: 0}
+	s.Add(&Subscrier{"A"})
+	s.Add(&Subscrier{"B"})
 
-	sub.Attach(&co1)
-	sub.Attach(&co2)
-	//
-	err := sub.Notify(1)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	sub.GetIDs()
+	s.Notify("Hello")
 }
